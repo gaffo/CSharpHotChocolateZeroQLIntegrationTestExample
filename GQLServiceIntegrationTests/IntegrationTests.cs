@@ -75,13 +75,39 @@ public class Tests
     [Test]
     public void Mutation_Count_Default()
     {
+        var client = Client(0);
+        var result = client.Mutation(m => m.Add(3)).Result;
         
+        Assert.NotNull(result);
+        Assert.Null(result.Errors); // check errors
+        Assert.NotNull(result.Data);
+        
+        var actual = result.Data;
+        Assert.That(actual, Is.EqualTo(3));
+        
+        // Ok do it again to show it's actually server scoped not request scoped
+        result = client.Mutation(m => m.Add(3)).Result;
+        
+        Assert.NotNull(result);
+        Assert.Null(result.Errors); // check errors
+        Assert.NotNull(result.Data);
+        
+        actual = result.Data;
+        Assert.That(actual, Is.EqualTo(6));
     }
 
     [Test]
     public void Mutation_Count_WithHigherDefault()
     {
+        var client = Client(10);
+        var result = client.Mutation(m => m.Add(3)).Result;
         
+        Assert.NotNull(result);
+        Assert.Null(result.Errors); // check errors
+        Assert.NotNull(result.Data);
+        
+        var actual = result.Data;
+        Assert.That(actual, Is.EqualTo(10 + 3));
     }
 }
 
