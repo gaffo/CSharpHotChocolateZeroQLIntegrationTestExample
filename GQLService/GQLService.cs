@@ -8,8 +8,7 @@ using Path = System.IO.Path;
 namespace GQLService;
 
 /*
- * This class encapsulates a re-usable service for our GQL but allows
- * the caller to do the dependency injection.
+ * This class encapsulates a service for a GQL stack, with some helper functions.
  *
  * This allows us to use the service both in a real GQL server as well as in integration tests.
  */
@@ -25,7 +24,21 @@ public class GQLService
                       throw new ArgumentNullException("WebApplication.CreateBuilder(args)");
         
         // Setup overall DI
-        builder.Host.ConfigureServices((ctx, services) =>
+        builder.Host.ConfigureServices(ConfigureServices(configureDelegate));
+
+        // Create the web application
+        _app = builder.Build();
+        
+        // Setup Hotchocolate features
+        _app.MapGraphQL();
+        _app.MapGraphQLSchema();
+    }
+
+    // This function is used to configure all of the services needed for a service stack
+    // It's re-used with the integration tests and the 
+    public static Action<HostBuilderContext, IServiceCollection> ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
+    {
+        return (ctx, services) =>
         {
             // Let our caller configure themselves for base DI
             configureDelegate(ctx, services); 
@@ -52,14 +65,7 @@ public class GQLService
             
             // This is code first, so register our GQL types
             AddGQLTypes(gqlServer);
-        });
-
-        // Create the web application
-        _app = builder.Build();
-        
-        // Setup Hotchocolate features
-        _app.MapGraphQL();
-        _app.MapGraphQLSchema();
+        };
     }
 
 
@@ -94,7 +100,7 @@ public class GQLService
     }
 
     // Code first register our query and mutation types
-    private void AddGQLTypes(IRequestExecutorBuilder gql)
+    public static void AddGQLTypes(IRequestExecutorBuilder gql)
     {
         gql.AddQueryType<Query>();
         gql.AddMutationType<Mutation>();

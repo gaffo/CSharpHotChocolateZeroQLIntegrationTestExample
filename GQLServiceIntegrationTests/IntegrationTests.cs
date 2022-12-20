@@ -1,6 +1,11 @@
+using System.Net;
 using GQLService;
 using GQLServiceIntegrationTests.Client;
+using HotChocolate;
+using HotChocolate.Execution;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Person = GQLService.Person;
 
@@ -29,21 +34,36 @@ public class Tests
         // injecting an actual instance
         var countRepo = new InMemoryCountRepository(count);
 
-        var testService = new GQLService.GQLService((ctx, service) =>
+        // Now we have a service... we need to get ahold of the request executor for it, and then glue that up to a http client
+        
+        // First make a DI container directly
+        var service = new ServiceCollection();
+        // Now make a host builder context with no properties
+        var context = new HostBuilderContext(new Dictionary<object, object>());
+        // Now wire up the service
+
+        GQLService.GQLService.ConfigureServices((context, services) =>
         {
             // Configure your dependency injection framework here
             // generally stuff you need to DI wire with constructors go here
-                
+
             // In this integration test version we're actually going to put the configured
             // instance of the count repo in so that we can manipulate it
             service.AddSingleton<ICountRepository, InMemoryCountRepository>(s => countRepo);
-                
+
             // We also need to create the personrepo, same deal, but this time
             // since there's really no state here we'll just let it be request scoped
             service.AddScoped<IPersonRepository, PersonRepsitory>();
-        });
+        })(context, service);
         
-        // Now we have a service... we need to get ahold of the request executor for it, and then glue that up to a http client
+        // Now we need to get to the request provider
+        var provider = service.BuildServiceProvider();
+        var handler = new GQLInMemoryMessageHandler(provider);
+
+        // Create a http client to use for the tests with this handler
+        var htc = new HttpClient(handler);
+        htc.BaseAddress = new Uri("http://integration_test/graphql"); // we have to set a base address
+        return htc;
     }
 
     public IntegrationTestClient Client(int count)
@@ -111,3 +131,58 @@ public class Tests
     }
 }
 
+// This class does the actual work of sending http requests, by putting it in an HTTP client
+// we keep ourselves from hitting the wire and actually just call the SendAsync function below
+// this lets us in-memory glue the http request to the GQL stack directly. For great good.
+class GQLInMemoryMessageHandler: HttpMessageHandler
+{
+    private readonly ServiceProvider _serviceProvider;
+
+    public GQLInMemoryMessageHandler(ServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequest, CancellationToken cancellationToken)
+    {
+        // We need to take apart the raw http request and turn it into a GQL typed request... 
+        var queryString = new StreamReader(httpRequest.Content.ReadAsStream()).ReadToEnd();
+        // Parse it back into json
+        var j = JObject.Parse(queryString);
+        // Get the query out
+        var query = j["query"].ToString();
+        // Get the variables out as a dict
+        var variables = j["variables"].ToObject<Dictionary<string, string>>();
+        
+        // We now have mapped the http request to in memory objects
+        // which we can now use to directly invoke HotCoffee and our integration stack
+        
+        // first create a request builder
+        var requestBuilder = QueryRequestBuilder.New().SetQuery(query);
+        
+        // set the varibles on the request builder from the GQL http request
+        foreach (var (key, value) in variables)
+        {
+            requestBuilder.AddVariableValue(key, value);
+        }
+        
+        // Give the request builder our stack context
+        requestBuilder.SetServices(_serviceProvider);
+
+        // Create an actual request
+        var request = requestBuilder.Create();
+        
+        // Execute it
+        var response = await _serviceProvider.ExecuteRequestAsync(request);
+        
+        // Get the body back
+        var responseJson = response.ToJson();
+        
+        // Map it back to a http response
+        return new HttpResponseMessage
+        {
+            Content = new StringContent(responseJson),
+            StatusCode = HttpStatusCode.OK,
+        };
+    }
+}
