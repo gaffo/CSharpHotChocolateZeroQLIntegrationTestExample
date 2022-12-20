@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GQLServer", "GQLServer\GQLServer.csproj", "{057CF5AC-5E1D-43AA-BFD3-4428CB11C0EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GQLService", "GQLService\GQLService.csproj", "{70C52FB9-C6D0-4ED6-9D01-4141F87832FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GQLServiceIntegrationTests", "GQLServiceIntegrationTests\GQLServiceIntegrationTests.csproj", "{78F96B8C-942D-4434-BE1A-4710E82C2C23}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{057CF5AC-5E1D-43AA-BFD3-4428CB11C0EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{057CF5AC-5E1D-43AA-BFD3-4428CB11C0EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{057CF5AC-5E1D-43AA-BFD3-4428CB11C0EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{057CF5AC-5E1D-43AA-BFD3-4428CB11C0EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70C52FB9-C6D0-4ED6-9D01-4141F87832FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70C52FB9-C6D0-4ED6-9D01-4141F87832FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70C52FB9-C6D0-4ED6-9D01-4141F87832FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70C52FB9-C6D0-4ED6-9D01-4141F87832FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78F96B8C-942D-4434-BE1A-4710E82C2C23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78F96B8C-942D-4434-BE1A-4710E82C2C23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78F96B8C-942D-4434-BE1A-4710E82C2C23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78F96B8C-942D-4434-BE1A-4710E82C2C23}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
