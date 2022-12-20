@@ -1,6 +1,8 @@
 using GQLService;
+using GQLServiceIntegrationTests.Client;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using Person = GQLService.Person;
 
 namespace GQLServiceIntegrationTests;
 
@@ -43,13 +45,31 @@ public class Tests
         
         // Now we have a service... we need to get ahold of the request executor for it, and then glue that up to a http client
     }
-    
-    public 
+
+    public IntegrationTestClient Client(int count)
+    {
+        var htc = TestHttpClient(count);
+        return new IntegrationTestClient(htc);
+    }
 
     [Test]
     public void Query_Person()
     {
+        var expected = new PersonRepsitory().Person;
+        var client = Client(0);
+
+        var result = client.Query(static q => q.Person(s => new Person
+        {
+            FirstName = s.FirstName,
+            LastName = s.LastName,
+        })).Result;
         
+        Assert.NotNull(result);
+        Assert.Null(result.Errors); // check errors
+        Assert.NotNull(result.Data);
+        
+        var actual = result.Data;
+        Assert.That(actual, Is.SameAs(expected));
     }
 
     [Test]
