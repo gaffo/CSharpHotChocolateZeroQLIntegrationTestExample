@@ -73,23 +73,24 @@ public class Tests
     }
 
     [Test]
-    public void Query_Person()
+    public async Task Query_Person()
     {
         var expected = new PersonRepsitory().Person;
         var client = Client(0);
 
-        var result = client.Query(static q => q.Person(s => new Person
+        var result = await client.Query(static q => q.Person(s => new Person
         {
             FirstName = s.FirstName,
             LastName = s.LastName,
-        })).Result;
+        }));
         
         Assert.NotNull(result);
         Assert.Null(result.Errors); // check errors
         Assert.NotNull(result.Data);
         
         var actual = result.Data;
-        Assert.That(actual, Is.SameAs(expected));
+        Assert.That(actual.FirstName, Is.EqualTo(expected.FirstName));
+        Assert.That(actual.LastName, Is.EqualTo(expected.LastName));
     }
 
     [Test]
@@ -151,9 +152,14 @@ class GQLInMemoryMessageHandler: HttpMessageHandler
         var j = JObject.Parse(queryString);
         // Get the query out
         var query = j["query"].ToString();
+
         // Get the variables out as a dict
-        var variables = j["variables"].ToObject<Dictionary<string, string>>();
-        
+        var variables = new Dictionary<string, string>();
+        if (j.ContainsKey("variables"))
+        {
+            variables = j["variables"].ToObject<Dictionary<string, string>>();
+        }
+
         // We now have mapped the http request to in memory objects
         // which we can now use to directly invoke HotCoffee and our integration stack
         
