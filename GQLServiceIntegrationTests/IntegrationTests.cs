@@ -154,10 +154,10 @@ class GQLInMemoryMessageHandler: HttpMessageHandler
         var query = j["query"].ToString();
 
         // Get the variables out as a dict
-        var variables = new Dictionary<string, string>();
+        var variables = new Dictionary<string, object>();
         if (j.ContainsKey("variables"))
         {
-            variables = j["variables"].ToObject<Dictionary<string, string>>();
+            variables = j["variables"].ToObject<Dictionary<string, object>>();
         }
 
         // We now have mapped the http request to in memory objects
